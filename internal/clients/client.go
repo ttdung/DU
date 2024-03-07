@@ -2,12 +2,9 @@ package clients
 
 import (
 	"context"
-	"github.com/LampardNguyen234/whale-alert/internal/clients/common"
-	"github.com/LampardNguyen234/whale-alert/internal/clients/cosmos"
-	"github.com/LampardNguyen234/whale-alert/internal/clients/evm"
-	"github.com/LampardNguyen234/whale-alert/internal/clients/tiki"
-	"github.com/LampardNguyen234/whale-alert/internal/store"
-	"github.com/LampardNguyen234/whale-alert/logger"
+	"github.com/ttdung/du/internal/clients/common"
+	"github.com/ttdung/du/internal/clients/evm"
+	"github.com/ttdung/du/logger"
 	"math/big"
 )
 
@@ -16,28 +13,15 @@ type Client interface {
 }
 
 // NewClientsFromConfig creates new Client's from the given config.
-func NewClientsFromConfig(cfg ClientsConfig, store *store.Store, log logger.Logger) (map[string]Client, error) {
+func NewClientsFromConfig(cfg ClientsConfig, log logger.Logger) (map[string]Client, error) {
 	ret := make(map[string]Client)
 	if cfg.Evm.Enabled {
-		evmClient, err := evm.NewEvmClient(cfg.Evm, store, log)
+		evmClient, err := evm.NewEvmClient(cfg.Evm, log)
 		if err != nil {
 			return nil, err
 		}
 		ret[common.EvmClientName] = evmClient
 	}
-	if cfg.Cosmos.Enabled {
-		cosmosClient, err := cosmos.NewCosmosClient(cfg.Cosmos, store, log)
-		if err != nil {
-			return nil, err
-		}
-		ret[common.CosmosClientName] = cosmosClient
-	}
-	if cfg.TikiExchange.Enabled {
-		tikiClient := tiki.NewTikiClient(cfg.TikiExchange, log)
-		ret[common.TikiExchangeClientName] = tikiClient
-	}
-
-	common.InitExplorer(cfg.Cosmos.ChainID)
 
 	return ret, nil
 }

@@ -4,23 +4,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ttdung/du/internal/clients"
+	"github.com/ttdung/du/listener"
+	"github.com/ttdung/du/logger"
 
 	"io/ioutil"
 )
 
 type Config struct {
-	Logger  logger.LoggerConfig   `json:"Logger"`
-	Clients clients.ClientsConfig `json:"Clients"`
+	Logger   logger.LoggerConfig     `json:"Logger"`
+	Clients  clients.ClientsConfig   `json:"Clients"`
+	Listener listener.ListenerConfig `json:"Listener"`
 }
 
 func DefaultConfig() Config {
 	return Config{
-		Logger: logger.DefaultConfig(),
-		//Webhooks:   webhook.DefaultConfig(),
-		Clients: clients.DefaultConfig(),
-		//LevelDB:    db.DefaultLevelDBConfig(),
-		//Listener:   listener.DefaultConfig(),
-		//Processors: processor.DefaultConfig(),
+		Logger:   logger.DefaultConfig(),
+		Clients:  clients.DefaultConfig(),
+		Listener: listener.DefaultConfig(),
 	}
 }
 
@@ -28,21 +28,10 @@ func (cfg Config) IsValid() (bool, error) {
 	if _, err := cfg.Logger.IsValid(); err != nil {
 		return false, fmt.Errorf("invalid LoggerConfig: %v", err)
 	}
-	//if _, err := cfg.Webhooks.IsValid(); err != nil {
-	//	return false, fmt.Errorf("invalid WebHookConfig: %v", err)
-	//}
+
 	if _, err := cfg.Clients.IsValid(); err != nil {
 		return false, fmt.Errorf("invalid service config: %v", err)
 	}
-	//if _, err := cfg.LevelDB.IsValid(); err != nil {
-	//	return false, fmt.Errorf("invalid leveldb config: %v", err)
-	//}
-	//if _, err := cfg.Listener.IsValid(); err != nil {
-	//	return false, fmt.Errorf("invalid listener config: %v", err)
-	//}
-	//if _, err := cfg.Processors.IsValid(); err != nil {
-	//	return false, fmt.Errorf("invalid processors config: %v", err)
-	//}
 
 	return true, nil
 }

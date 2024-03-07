@@ -2,21 +2,16 @@ package evm
 
 import (
 	"context"
-	"github.com/ethereum/go-ethereum/common"
-	clientCommon "github.com/ttdung/du/internal/clients/common"
 	internalCommon "github.com/ttdung/du/internal/common"
 	"math/big"
 	"time"
 )
 
 var (
-	blockRetryInterval = 3 * time.Second
+	blockRetryInterval = 5 * time.Second
 )
 
 func (c *EvmClient) ListenToTxs(ctx context.Context, txResult chan interface{}, startBlk *big.Int) {
-	txHashChan := make(chan common.Hash)
-	go c.subscribePendingTxs(ctx, txHashChan)
-
 	var currentBlk *big.Int
 	if startBlk != nil {
 		currentBlk = new(big.Int).SetUint64(startBlk.Uint64())
@@ -26,13 +21,7 @@ func (c *EvmClient) ListenToTxs(ctx context.Context, txResult chan interface{}, 
 		case <-ctx.Done():
 			c.log.Infof("ListenToTxs STOPPED")
 			return
-		case txHash := <-txHashChan:
-			c.log.Infof("new pending transaction: %v", txHash)
-			receipt, err := c.TransactionReceipt(ctx, txHash)
-			if err != nil {
-				c.log.Errorf("failed to get transactionReceipt of %v: %v", txHash, err)
-			}
-			txResult <- receipt
+
 		default:
 			head, err := c.LatestBlockHeight(ctx)
 			if err != nil {
@@ -48,43 +37,23 @@ func (c *EvmClient) ListenToTxs(ctx context.Context, txResult chan interface{}, 
 				continue
 			}
 
+			c.log.Infof("================= BlockHeight: %v", currentBlk)
+
 			txs, err := c.BlockTxsByHeight(ctx, currentBlk)
 			if err != nil {
 				c.log.Errorf("failed to get blockTxsByHeight(%v): %v", currentBlk.Uint64(), err)
 				continue
 			}
+			//c.log.Infof("============== # of TX: %v", len(txs))
 			for _, tx := range txs {
+				c.log.Infof("============== TX hash: %v", tx.TxHash)
 				txResult <- tx
-			}
-
-			err = c.store.StoreLastBlock(currentBlk, clientCommon.EvmClientID)
-			if err != nil {
-				c.log.Errorf("failed to storeLastBlock(%v): %v", currentBlk.Uint64(), err)
 			}
 
 			if currentBlk.Uint64()%100 == 0 {
 				c.log.Debugf("ListenToTxs finished block %v", currentBlk.Uint64())
 			}
 			currentBlk = currentBlk.Add(currentBlk, big.NewInt(1))
-		}
-	}
-}
-
-func (c *EvmClient) subscribePendingTxs(ctx context.Context, txResult chan common.Hash) {
-	sub, err := c.GEthClient.SubscribePendingTransactions(ctx, txResult)
-	if err != nil {
-		c.log.Errorf("failed to subscribe to pending transaction: %v", err)
-		return
-	}
-	c.log.Infof("Start listening to pending txs...")
-	for {
-		select {
-		case <-ctx.Done():
-			c.log.Infof("SubscribePendingTransactions STOPPED!")
-			return
-		case err = <-sub.Err():
-			c.log.Errorf("Subscription error: %v", err)
-			return
 		}
 	}
 }

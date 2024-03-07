@@ -3,9 +3,17 @@ package common
 import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/common"
-	internalCommon "github.com/ttdung/du/internal/common"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	//internalCommon "github.com/ttdung/du/internal/clients/common"
 	"strings"
+	"time"
+)
+
+const (
+	AsaDecimals      = 18
+	DefaultSleepTime = 2 * time.Second
+	ZeroAddress      = "0000000000000000000000000000000000000000"
+	DecimalDigits    = 5
 )
 
 // FormatMDLink creates a ref-text message following the MarkDown standard.
@@ -33,9 +41,9 @@ func MustAccountAddressToHex(addr string) string {
 }
 
 // AccountAddressToEthAddr parses the given address to an ETH address.
-func AccountAddressToEthAddr(addr string) (common.Address, error) {
-	zeroAddr := common.HexToAddress(addr)
-	if addr == internalCommon.ZeroAddress {
+func AccountAddressToEthAddr(addr string) (ethcommon.Address, error) {
+	zeroAddr := ethcommon.HexToAddress(addr)
+	if addr == ZeroAddress {
 		return zeroAddr, nil
 	}
 	if strings.HasPrefix(addr, sdk.GetConfig().GetBech32AccountAddrPrefix()) {
@@ -44,7 +52,7 @@ func AccountAddressToEthAddr(addr string) (common.Address, error) {
 		if err != nil {
 			return zeroAddr, fmt.Errorf("%v is not a valid Bech32 address", addr)
 		}
-		ethAddr := common.BytesToAddress(toAddr.Bytes())
+		ethAddr := ethcommon.BytesToAddress(toAddr.Bytes())
 		return ethAddr, nil
 	}
 
@@ -52,12 +60,12 @@ func AccountAddressToEthAddr(addr string) (common.Address, error) {
 		addr = "0x" + addr
 	}
 
-	valid := common.IsHexAddress(addr)
+	valid := ethcommon.IsHexAddress(addr)
 	if !valid {
 		return zeroAddr, fmt.Errorf("%s is not a valid Ethereum or Cosmos address", addr)
 	}
 
-	ethAddr := common.HexToAddress(addr)
+	ethAddr := ethcommon.HexToAddress(addr)
 
 	return ethAddr, nil
 }

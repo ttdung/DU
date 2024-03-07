@@ -2,10 +2,10 @@ package evm
 
 import (
 	"context"
-	"github.com/LampardNguyen234/whale-alert/logger"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/ethclient/gethclient"
 	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/ttdung/du/logger"
 	"math/big"
 )
 
